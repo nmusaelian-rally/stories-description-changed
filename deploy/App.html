@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Descriptions changed</title>
+
+    <script type="text/javascript" src="/apps/2.0rc3/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function () {
+                Ext.define("CustomApp",{extend:"Rally.app.App",componentCls:"app",items:{html:'<a href="https://help.rallydev.com/apps/2.0rc3/doc/">App SDK 2.0rc3 Docs</a>'},launch:function(){var that=this,today=(new Date).toISOString(),stories=Ext.create("Rally.data.wsapi.Store",{model:"UserStory",fetch:["ObjectID","FormattedID","Name","RevisionHistory"],autoLoad:!0,filters:[{property:"Iteration.StartDate",operator:"<=",value:today},{property:"Iteration.EndDate",operator:">=",value:today}]});stories.load().then({success:this._getRevisionHistory,scope:this}).then({success:this._onModelCreated,scope:this}).then({success:this._onModelLoaded,scope:this}).then({success:this._onRevisionsLoaded,scope:this}).then({success:function(results){console.log("success"),that._makeGrid(results)},failure:function(error){console.log("oh noes!",error)}})},_getRevisionHistory:function(stories){return this._stories=stories,console.log("stories",this._stories),Rally.data.ModelFactory.getModel({type:"RevisionHistory"})},_onModelCreated:function(model){var that=this,promises=[];return _.each(that._stories,function(story){console.log(story.get("_ref")),promises.push(model.load(Rally.util.Ref.getOidFromRef(story.data.RevisionHistory._ref)))}),Deft.Promise.all(promises)},_onModelLoaded:function(revHistories){console.log("revHistories",revHistories);var promises=[];return _.each(revHistories,function(revHistory){promises.push(revHistory.getCollection("Revisions",{filters:{property:"Description",operator:"contains",value:"DESCRIPTION changed"}}).load())}),Deft.Promise.all(promises)},_onRevisionsLoaded:function(revisions){return console.log("revisions",revisions),revisions},_makeGrid:function(revisions){var revs=_.flatten(revisions),data=[];_.each(revs,function(rev){data.push(rev.data)}),this.add({xtype:"rallygrid",showPagingToolbar:!0,editable:!1,store:Ext.create("Rally.data.custom.Store",{data:data}),columnCfgs:[{text:"Description",dataIndex:"Description"},{text:"User",dataIndex:"User",renderer:function(value){return value._refObjectName}},{text:"CreationDate",dataIndex:"CreationDate"}]})}});
+
+            Rally.launchApp('CustomApp', {
+                name:"Descriptions changed",
+	            parentRepos:""
+            });
+
+        });
+    </script>
+
+
+    <style type="text/css">
+        .app {
+     /* Add app styles here */
+}
+
+    </style>
+</head>
+<body></body>
+</html>
